@@ -1,4 +1,4 @@
 chiya
 =====
 
-chiya is only a compiler
+chiya is an interpreter.
