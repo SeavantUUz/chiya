@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include "y.tab.h"
+#include "chiya.h"
 
 int
 yywrap(void){
@@ -50,7 +51,7 @@ line_increment(void){
 <INITIAL> "*"           return MUL;
 <INITIAL> "/"           return DIV;
 
-<INITIAL>[A-Za-z_0-9]* {
+<INITIAL>[A-Za-z_][A-Za-z_0-9]* {
     yylval.identifier = chy_create_identifier(yytext);
     return IDENTIFIER;
 }
@@ -64,7 +65,7 @@ line_increment(void){
 
 <INITIAL>[0-9]+|0\.[0-9]+ {
     Expression *expression = chy_create_expression(DOUBLE_EXPRESSION);
-    sscanf(yytext,"%f",expression->u.double_value);
+    sscanf(yytext,"%lf",expression->u.double_value);
     yylval.expression = expression;
     return DOUBLE_LITERAL;
 }
