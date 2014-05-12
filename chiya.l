@@ -43,7 +43,7 @@ line_increment(void){
 <INITIAL> "=="          return EQ;
 <INITIAL> ">"           return GT;
 <INITIAL> ">="          return GE;
-<INITIAL> "<"           return LT 
+<INITIAL> "<"           return LT;
 <INITIAL> "<="          return LE;
 
 <INITIAL> "+"           return ADD;
