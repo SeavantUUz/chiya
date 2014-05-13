@@ -86,16 +86,115 @@ statement_list
     }
     ;
 
+
 expression
     : logical_or_expression
-    | IDENTIFIER ASSIGN expression
+    | IDENTIFIER ASSIGN logical_or_expression
     {
         $$ = chy_create_assign_expression($1,$3);
     }
-    ;
 
 logical_or_expression
     : logical_and_expression
+    | logical_or_expression OR logical_and_expression
+    {
+        $$  = chy_create_binary_expression(LOGICAL_OR_EXPRESSION,$1,$3);
+    }
+
+logical_and_expression
+    : equality_expression
+    | logical_and_expression AND equality_expression
+    {
+        $$ = chy_create_binary_expression(LOGICAL_AND_EXPRESSION,$1,$3);
+    }
+
+equality_expression
+    : relational_expression
+    | equality_expression EQ relational_expression
+    {
+        $$ = chy_create_binary_expression(EQ_EXPRESSION,$1,$3);
+    }
+    | equality_expression NE relational_expression
+    {
+        $$ = chy_create_binary_expression(NE_EXPRESSION,$1,$3);
+    }
+    ;
+
+relational_expression
+    : arithmetic_expression
+    | relational_expression GT arithmetic_expression
+    {
+        $$ = chy_create_binary_expression(GT_EXPRESSION,$1,$3);
+    }
+    | relational_expression GE arithmetic_expression
+    {
+        $$ = chy_create_binary_expression(GE_EXPRESSION,$1,$3);
+    }
+    | relational_expression LT arithmetic_expression
+    {
+        $$ = chy_create_binary_expression(LT_EXPRESSION,$1,$3);
+    }
+    | relational_expression LE arithmetic_expression
+    {
+        $$ = chy_create_binary_expression(LE_EXPRESSION,$1,$3);
+    }
+    ;
+
+%left ADD SUB
+%left MUL DIV
+arithmetic_expression
+    : call_expression
+    | arithmetic_expression ADD call_expression
+    {
+        $$ = chy_create_binary_expression(ADD_EXPRESSION,$1,$3);
+    }
+    | arithmetic_expression SUB call_expression
+    {
+        $$ = chy_create_binary_expression(SUB_EXPRESSION,$1,$3);
+    }
+    | arithmetic_expression MUL call_expression
+    {
+        $$ = chy_create_binary_expression(MUL_EXPRESSION,$1,$3);
+    }
+    | arithmetic_expression DIV call_expression
+    {
+        $$ = chy_create_binary_expression(DIV_EXPRESSION,$1,$3);
+    }
+    ;
+
+call_expression
+    : IDENTIFIER LP arguement_list RP
+    {
+        $$ = chy_create_function_call_expression(CALL_EXPRESSION($1,$3);
+    }
+    | IDENTIFIER LP RP
+    {
+        $$ = chy_create_function_call_expression(CALL_EXPRESSION($1,NULL);
+    }
+    | LP expression RP
+    {
+        $$ = $2;
+    }
+    | IDENTIFIER
+    {
+        $$ =  chy_create_identifier_expression($1);
+    }
+    | INT_LITERAL
+    | DOUBLE_LITERAL
+    | STRING_LITERAL
+    | TRUE
+    {
+        $$ = chy_create_boolen_expression(CHY_TRUE); 
+    }
+    | FALSE
+    {
+        $$ = chy_create_boolen_expression(CHY_FALSE);
+    }
+    | NONE
+    {
+        $$ = chy_create_boolen_expression(CHY_NONE);
+    }
+    ;
 
 statement
     : expression SEMICOLON
