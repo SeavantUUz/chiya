@@ -6,11 +6,11 @@
 %union {
     char          *identifier;
     ParameterList *parameter_list;
-    ArguementList *arguement_list;
+    ArgumentList *argument_list;
     Expression    *expression;
     Statement     *statement;
     StatementList *statement_list;
-    Block *Block;
+    Block         *block;
     Elif *elif    *elif;
     IdentifierList *identifier_list;
 }

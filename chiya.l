@@ -41,6 +41,7 @@ line_increment(void){
 <INITIAL> "or"          return OR;
 <INITIAL> "="           return ASSIGN;
 <INITIAL> "=="          return EQ;
+<INITIAL> "!="          return NE;
 <INITIAL> ">"           return GT;
 <INITIAL> ">="          return GE;
 <INITIAL> "<"           return LT;
@@ -75,9 +76,9 @@ line_increment(void){
     BEGIN STRING_LITERAL_STATE;
 }
 
-<INITAL>[ \t];
+<INITIAL>[ \t];
 
-<INITAL>\n {
+<INITIAL>\n {
     line_increment();
 }
 
@@ -85,7 +86,7 @@ line_increment(void){
     BEGIN COMMENT;
 }
 
-<INITAL>. {
+<INITIAL>. {
     chy_compiler_error(CHARACTER_INVAILD_ERROR);    
 }
 
