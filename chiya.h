@@ -7,6 +7,11 @@ typedef struct ParameterList_tag{
     struct ParameterList_tag *next;
 } ParameterList;
 
+typedef struct ArgumentList_tag{
+    Expression *expression;
+    struct ArgumentList_tag *next;
+} ArgumentList;
+
 typedef struct IdentifierList_tag{
     char *identifier;
     struct IdentifierList_tag *next;
@@ -52,10 +57,6 @@ struct Expression_tag{
 
 typedef Expression_tag Expression;
 
-typedef struct ArgumentList_tag{
-    Expression *expression;
-    struct ArgumentList_tag *next;
-} ArgumentList;
 
 typedef struct {
     char *variable;
@@ -91,8 +92,6 @@ typedef struct Statement_tag {
         IfStatement *if_s;
         ForStatement *for_s;
         ReturnStatement *return_s;
-        BreakStatement *break_s;
-        ContinueStatement *continue_s;
     } u;
 };
 
@@ -110,7 +109,7 @@ typedef struct Elif_tag {
 } Elif;
 
 typedef struct {
-    *StatementList statement_list;
+    StatementList *statement_list;
 } Block;
 
 typedef struct {
@@ -134,5 +133,65 @@ typedef struct {
 typedef struct {
     Expression *value;
 } ReturnStatement;
+
+enum {
+    CHIYA_FUNCTION_DEFINATION = 1;
+    NATIVE_FUNCTION_DEFINATION;
+} FunctionDefinationType;
+
+typedef struct FunctionDefinition_tag {
+    char *function_name;
+    FunctionDefinitionType type;
+    union {
+        struct {
+        ParamentList *paramenter;
+        Block *block;
+        } chiya_f;
+        struct {
+        CHY_NativeFunctionProc *proc;
+        } native_f;
+    } u;
+    struct FunctionDefinition_tag *next;
+} FunctionDefination;
+
+struct CHY_Interpreter_tag {
+    MEM_Storage     interpreter_storage;
+    MEM_Storage     execute_storage;
+    Variable        *variable;
+    FunctionDefinition *function_list;
+    StatementList   *statement_list;
+    int     current_line_number;
+};
+
+// global variable storage
+typedef struct Variable_tag {
+    char *name;
+    CHY_value value;
+    struct Variable_tag *next;
+} Variable;
+
+typedef struct GlobalVariableRef_tag {
+    Variable *variable;
+    struct GlobalVariableRef_tag *next;
+} GlobalVariableRef;
+
+typedef struct {
+    Variable *variable;
+    GlobalVariableRef *global_variable;
+} LocalEnvironment;
+
+typedef enum {
+    NO_RETURN_STATEMENT_RESULT = 1;
+    RETURN_STATEMENT_RESULT;
+    BREAK_STATEMENT_RESULT;
+    CONTINUE_STATEMENT_RESULT;
+} StatementResultType;
+
+typedef struct {
+    StatementResultType type;
+    union {
+        CHY_Value value; 
+    }
+} StatementResult;
 
 #endif
