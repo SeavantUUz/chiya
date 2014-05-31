@@ -194,4 +194,17 @@ typedef struct {
     }
 } StatementResult;
 
+struct CHY_String_tag {
+    int ref_count;
+    char *string;
+    CHY_Boolean is_literal;
+};
+
+typedef struct {
+    CHY_String *strings;
+} StringPool;
+
+/* execute.c */
+
+
 #endif

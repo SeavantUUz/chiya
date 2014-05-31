@@ -1,5 +1,5 @@
 #include "chiya.h"
-
+#include "DBG.h"
 
 StatementResult
 chy_execute_statement_list(CHY_Interpreter *inter,LocalEnvironment *env,StatementList *list)
@@ -8,7 +8,7 @@ chy_execute_statement_list(CHY_Interpreter *inter,LocalEnvironment *env,Statemen
     StatementResult result;
 
     result.type = NORMAL_STATEMENT_RESULT;
-    for(pos = list;post;post->next){
+    for(pos = list;pos;pos->next){
         result = execute_statement(inter,env,pos->statement);
         if (result.type != NORMAL_STATEMENT_RESULT)
             goto FUNC_END;
@@ -50,4 +50,10 @@ execute_statement(CHY_Interpreter *inter,LocalEnvironment *env,Statement *statem
             DBG_panic(("panic!!!");
     }
     return result;
+}
+
+static StatementResult
+chy_eval_expression(CHY_Interpreter *inter,LocalEnvironment *env,Expression *expression){
+
+    StatementResult result;
 }
