@@ -88,15 +88,15 @@ eval_string_expression(CHY_Interpreter *inter,CHY_String *string_value){
 }
 
 static CHY_Value
-eval_identifier_expression(CHY_Interpreter *inter,LocalEnvironment *env,Expression *expression){
-    CHY_value v;
+eval_identifier_expression(CHY_Interpreter *inter,LocalEnvironment *env,char *identifier){
+    CHY_Value v;
     Variable *variable;
 
-    variable = chy_search_local_variable(env,expression->u.identifier);
+    variable = chy_search_local_variable(env,identifier);
     if (variable != NULL) {
         v = variable->value;
     }else {
-        variable = chy_search_global_variable(inter,env,expression->u.identifier);
+        variable = chy_search_global_variable(inter,env,identifier);
         if (variable != NULL) {
             v = variable->value;
         } else{
@@ -104,4 +104,103 @@ eval_identifier_expression(CHY_Interpreter *inter,LocalEnvironment *env,Expressi
         }
     }
     return v;
+}
+
+static CHY_Value
+eval_assign_expression(CHY_Interpreter *inter,LocalEnvironment *env,char *identifier,Expression *expression){
+    CHY_Value v;
+    Variable *left;
+
+    v = chy_eval_expression(inter,env,expression);
+    
+    left = chy_search_local_variable(env,identifier);
+    if(variable == NULL) {
+        left = chy_sarch_global_variable(inter,env,identifier);
+    }
+    if(left != NULL){
+        // 这里有一个释放和引用字符串的操作，应该是和字符串池有关，不管
+        left->value = v;
+    }else{
+        if (env != null){
+            chy_add_local_variable(&v);
+        }
+        else{
+            chy_add_global_variable(&v);
+        }
+    return v;
+}
+
+Static CHY_Value
+eval_binary_expression(CHY_Interpreter *inter,LocalEnvironment *env,ExpressionType type,Expression *left,Expression *right){
+    CHY_Value left_val;
+    CHY_Value right_val;
+    CHY_Value result;
+
+    if (left_val.type == CHY_INT_VALUE
+            && right_val.type == CHY_INT_VALUE) {
+        //为什么需要记录行数呢？
+        eval_binary_int(inter,type,left_value.u.int_value,right_val.u.int_value,&result);
+    }
+    else if(left_value.type == CHY_DOUBLE_VALUE
+            && right_value.type == CHY_DOUBLE_VALUE){
+        eval_binary_int(inter,type,left_value.u.double_value,right_value.u.double_value,&result);
+    }
+    else if(left_value.type == CHY_INT_VALUE
+            && right_value.type == CHY_DOUBLE_VALUE){
+        left_value.u.double_value = left_val.u.int_value;
+        eval_binary_double(inter,type, left_value.u.double_value,right_value.u.double_value,&result);
+    }
+    else if(left_value.type == CHY_DOUBLE_VALUE
+            && right_value.type == CHY_INT_VALUE){
+        right_value.u.double_value = right_val.u.int_value;
+        eval_binary_double(inter,type,left_value.u.double_value,right_value.u.double_value,&result);
+    }
+    else if(left_value.type == CHY_BOOLEAN_VALUE
+            && right_value.type == CHY_BOOLEAN_VALUE){
+        result.type = CHY_BOOLEAN_VALUE;
+        result.u.boolean_value
+            = eval_binary_boolean(inter,type,left_value.u.boolean_value,right_value.u.boolean_value);
+    }
+    else if(left_value.type == CHY_STRING_VALUE
+            && type == ADD_EXPRESSION) {
+        char buf[LINE_BUF_SIZE];
+        CHY_String *right_string;
+
+        // 这里英文好奇怪
+        if(right_value.type == CHY_INT_VALUE) {
+            sprintf(buf,"%d",right_value.u.int_value);
+            right_string = chy_create_string(inter,MEM_strdup(buf));
+        } else if (right_val.type == CHY_DOUBLE_VALUE) {
+            sprintf(buf,"%f",right_val.u.double_value);
+            right_string = chy_create_string(inter,MEM_strdup(buf));
+        } else if(right_value.type == CHY_BOOLEAN_VALUE){
+            if (right_value.u.boolean_value){
+            right_string = chy_create_string(inter,MEM_strdup("true"));
+            }
+            else {
+            right_string = chy_create_string(inter,MEM_strdup("false"));
+            }
+        } else if(right_value.type == CHY_STRING_VALUE){
+           right_string = right_value.u.string_value; 
+        } 
+        // 我还沒弄懂这个内部指针到底是干嘛用的，所以pass
+            else if (right_value.type == CHY_NONE_VALUE){
+            right_string = chy_create_string(inter,MEM_strdup("none"))
+        }
+        result.type = CHY_STRING_VALUE;
+        result.u.string_value = chain_string(inter,left_val.u.string_value,right_string);
+    }else if (left_val.type == CHY_STRING_VALUE
+            && right_value.type == CHY_STRING_VALUE){
+        result.type = CHY_BOOLEAN_VALUE;
+        result.u.boolean_value
+            = eval_compare_string(type,&left_val,&right_val);
+    } else if (left_val.type == CHY_NONE_VALUE
+            || right_value.type == CHY_NONE_VALUE){
+        result.type = CHY_BOOLEAN_VALUE;
+        result.u.boolean_value
+             = eval_compare_none(inter,type,&left_val,&right_val);
+    } else{
+        DEG_panic(("panic!!!"));
+    }
+    return result;
 }
