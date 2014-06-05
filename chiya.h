@@ -144,7 +144,7 @@ typedef struct FunctionDefinition_tag {
     FunctionDefinitionType type;
     union {
         struct {
-        ParamentList *paramenter;
+        ParametList *parameter;
         Block *block;
         } chiya_f;
         struct {

@@ -204,3 +204,131 @@ eval_binary_expression(CHY_Interpreter *inter,LocalEnvironment *env,ExpressionTy
     }
     return result;
 }
+
+static CHY_Value
+eval_logical_expression(CHY_Interpreter *inter,LocalEnvironment *env,char *identifier,ExpressionType operator,Expression *right){
+    CHY_Value left_val;
+    CHY_Value right_val;
+    CHY_Value result;
+    int flag = -1;
+   
+    result.type = CHY_BOOLEAN_VALUE;
+    left_val = eval_expression(inter,env,left);
+    if (left_val.type != CHY_BOOLEAN_VALUE){
+        if(left_val.type == CHY_NONE_VALUE){
+            flag = 0;
+        }
+        else{
+            flag = 1;
+        }
+
+    }
+    if (operator == LOGICAL_AND_EXPRESSION){
+        if (flag == 0 || !left_val.u.boolean_value){
+            result.u.boolean_value = CHY_FALSE;
+            return result;
+        }
+    } else if (operator == LOGICAL_OR_EXPRESSION){
+        if (flag == 1 || left_val.u.boolean_value){
+            result.u.boolean_value = CHY_TRUE;
+            return result;
+        }
+    } else {
+        DBG_panic(("bad operator"!!));
+    }
+
+    right_val = eval_expression(inter,env,right);
+    if (right_val.type != CHY_BOOLEAN_VALUE){
+        if (right_vale.type == CHY_NONE_VALUE){
+            result.u.boolean_value = CHY_FALSE;
+            return result;
+        } else {
+            result.u.boolean_value = CHY_TRUE;
+            return result;
+        }
+
+        result.u.boolean_value = right_value.u.boolean_value;
+        return result;
+    }
+}
+
+static CHY_Value
+eval_call_expression(CHY_Interpreter *inter,LocalEnvironment *env,Expression *expression){
+    CHY_Value value;
+    FunctionDefination *function;
+
+    char *identifier = expression -> u.call_expression.identifier;
+
+    function = search_function(identifier);
+    if (function == NULL) {
+        chy_runtime_error("could not find function !!!");
+    }
+    switch(function->type){
+        case CHIYA_FUNCTION_DEFINETION:
+            value = call_chiya_function(inter,env,expression,function);
+            break;
+        case NATIVE_FUNCTION_DEFINETION:
+            // 其实我不知道这里的proc是干嘛的……
+            // proc是一个回调函数
+            value = call_native_function(inter,env,expression,function->u.native_f.proc);
+            break;
+        default:
+            DBG_panic(("panic!!!"));
+    }
+
+    return value;
+}
+
+static CHY_Value
+eval_native_function(CHY_Interpreter *inter,LocalEnvironment *env,Expression *expression,CHY_NativeFunctionProc *proc){
+    CHY_Value value;
+    int arg_count;
+    ArgumentList *arg_p;
+    CHY_Value *args;
+    int i;
+
+    for(arg_count = 0,arg_p = expression->u.call_expression.argument;arg_p;arg_p = arg_p->next){
+        arg_count ++;
+    }
+
+    args = MEM_malloc(sizeof(CHY_Value) * arg_count);
+
+    for (arg_p = expression->u.call_expression.argument,i=0;arg_p;arg_p = arg_p->next){
+        args[i] = eval_expression(inter,env,arg_p->expression);
+    }
+    value = proc(inter,env,args);
+    MEM_free(args);
+    return value;
+}
+
+static CHY_Value
+call_chiya_function(CHY_Interpreter *inter,LocalEnvironment *env,
+        Expression *expression,FunctionDefination *func){
+    CHY_Value value;
+    StatementResult result;
+    ArgumentList *arg_p;
+    ParameterList *param_p;
+    LocalEnvironment *local_env;
+
+    local_env = alloc_local_env();
+    for (arg_p = expression->call_expression.argument,
+            param_p = func->chiya_f.parameter;
+            arg_p;
+            arg_p = arg_p -> next,param_p = param_p -> next){
+        CHY_Value arg_val;
+
+        arg_val = eval_expression(inter,env,arg_p -> expression);
+        chy_add_local_variable(local_env,param_p->identifier,&arg_val);
+    }
+
+    result = chy_execute_statement_list(inter,local_env,func->chiya_f.block->statement_list);
+
+    if(result.type = RETURN_STATEMENT_RESULT){
+        value = result.u.value;
+    }else{
+        value.type = CHY_NONE_VALUE;
+    }
+
+    dispose_local_environment(local_env);
+    return value;
+}
