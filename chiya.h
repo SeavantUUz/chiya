@@ -191,7 +191,7 @@ typedef struct {
     StatementResultType type;
     union {
         CHY_Value value; 
-    }
+    } u;
 } StatementResult;
 
 struct CHY_String_tag {
