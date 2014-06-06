@@ -205,6 +205,116 @@ eval_binary_expression(CHY_Interpreter *inter,LocalEnvironment *env,ExpressionTy
     return result;
 }
 
+static void
+eval_binary_boolean(CHY_Interpreter *inter,ExpressionType type,
+        CHY_Boolean left,CHY_Boolean right,CHY_Value *result){
+    result->type = CHY_BOOLEAN_VALUE;
+    if (type == EQ_EXPRESSION){
+        result->u.boolean_value = left == right;
+    }else if(type == NE_EXPRESSION){
+        result->u.boolean_value = left != right;
+    }
+    // 错误处理什么的好麻烦啊好麻烦
+}
+
+static void
+eval_binary_int(CHY_Interpreter *inter,ExpressionType operator,
+        int left,int right,CHY_Value *result){
+    if (symbol_is_math_operator(operator)){
+        result->type = CHY_INT_VALUE;
+    }else if(symbol_is_compare_operator(operator)){
+        result->type = CHY_BOOLEAN_VALUE;
+    }else {
+        DEBUG_panic(("panic!!"));
+    }
+
+    switch(operator){
+        case ADD_EXPRESSION:
+            result->u.int_value = left + right;
+            break;
+        case SUB_EXPRESSION:
+            result->u.int_value = left - right;
+            break;
+        case MUL_EXPRESSION:
+            result->u.int_value = left * right;
+            break;
+        case DIV_EXPRESSION:
+            result->u.int_value = left / right;
+            break;
+        case MOD_EXPRESSION:
+            result->u.int_value = left % right;
+            break;
+        case EQ_EXPRESSION:
+            result->u.boolean = left == right;
+            break;
+        case NE_EXPRESSION:
+            result->u.boolean = left != right;
+            break;
+        case GT_EXPRESSION:
+            result->u.boolean = left > right;
+            break;
+        case GE_EXPRESSION:
+            result->u.boolean = left >= right;
+            break;
+        case LT_EXPRESSION:
+            result->u.boolean = left < right;
+            break;
+        case GT_EXPRESSION:
+            result->u.boolean = left <= right;
+            break;
+    }
+}
+
+static void
+eval_binary_double(CHY_Interpreter *int,ExpressionType operator,
+        double left,double right,CHY_Value *result){
+    if(symbol_is_math_operator){
+        result->type = CHY_DOUBLE_VALUE; 
+    }else if(symbol_is_compare_operator){
+        result->type = CHY_BOOLEAN_VALUE;
+    }else{
+        DEG_panic(("panic"));
+    }
+
+    switch(operater){
+        case ADD_EXPRESSION:
+            result->u.double_value = left + right;
+            break;
+        case SUB_EXPRESSION:
+            result->u.double_value = left - right;
+            break;
+        case MUL_EXPRESSION:
+            result->u.double_value = left * right;
+            break;
+        case DIV_EXPRESSION:
+            result->u.double_value = left / right;
+            break;
+        case MOD_EXPRESSION:
+            result->u.double_value = fmod(left,right);
+            break;
+        case EQ_EXPRESSION:
+            result->u.boolean_value = left == right;
+            break;
+        case NE_EXPRESSION:
+            result->u.boolean_value = left != right;
+            break;
+        case GT_EXPRESSION:
+            result->u.boolean_value = left > right;
+            break;
+        case GE_EXPRESSION:
+            result->u.boolean_value = left >= right;
+            break;
+        case LT_EXPRESSION:
+            result->u.boolean_value = left < right;
+            break;
+        case LE_EXPRESSION:
+            result->u.boolean_value = left <=  right;
+            break;
+        default:
+            DBG_panic(("panic"));
+    }
+}
+
 static CHY_Value
 eval_logical_expression(CHY_Interpreter *inter,LocalEnvironment *env,char *identifier,ExpressionType operator,Expression *right){
     CHY_Value left_val;
@@ -332,3 +442,35 @@ call_chiya_function(CHY_Interpreter *inter,LocalEnvironment *env,
     dispose_local_environment(local_env);
     return value;
 }
+
+static LocalEnvironment *
+alloc_local_environment(){
+    LocalEnvironment *env;
+
+    env = MEM_malloc(sizeof(LocalEnvironment));
+    env->variable = NULL;
+    env->global_variable = NULL;
+    return env;
+}
+
+static void
+dispose_local_environment(LocalEnvironment *env){
+    while (env->variable){
+        Variable *temp;
+        temp = env -> variable;
+        // 这里有一个释放字符串的操作，不过有必要特意对字符串释放么？
+        env->variable = temp->next;
+        MEM_free(temp);
+    }
+
+    while (env->global_variable){
+        GlobalVariableRef *ref;
+        ref = env->global_variable;
+        env->global_variable = ref->next;
+        MEM_free(ref);
+    }
+
+    MEM_free(env);
+}
+
+
